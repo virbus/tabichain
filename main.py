@@ -2,7 +2,6 @@ from core.file import load_file, save_file
 from core.menu import *
 from data.config import DATA_FILE, DATA_SHEET
 from core.functions import *
-
 def main():
     while True:
         accounts = load_file(debug=False, file=DATA_FILE, sheet=DATA_SHEET)
