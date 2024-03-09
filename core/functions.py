@@ -7,7 +7,7 @@ from requests.sessions import Session
 from fake_useragent import UserAgent
 from web3.middleware import geth_poa_middleware
 from web3.providers.rpc import HTTPProvider
-from data.config import RPC, TRANSFER_AMOUNT
+from data.config import RPC, TRANSFER_AMOUNT, SLEEP
 
 def extract_ip_from_proxy(proxy):
     if proxy.startswith("http://"):
@@ -67,10 +67,10 @@ def estimate_gas_and_send(name, web3, tx, private_key, tx_name):
     receipt = web3.eth.wait_for_transaction_receipt(transaction_hash)
     if receipt.status != 1:
         logger.error(f"{name} | Transaction {transaction_hash} failed!")
-        time.sleep(3)
+        time.sleep(SLEEP)
         return False
     logger.success(f"{name} | {tx_name} hash: {transaction_hash}")
-    time.sleep(3)
+    time.sleep(SLEEP)
     return True
 
 def create_transaction(name, web3, private_key, tx_name, to, value, data):
@@ -100,11 +100,11 @@ def claim_faucet(name, private_key: str, proxy=None):
     if response.status_code == 200:
         response = response.json()
         logger.success(f"{name} | {response['message']} | tx: {response['hash']}")
-        time.sleep(2)
+        time.sleep(SLEEP)
         return response
     else:
         logger.error(f"{name} | Error status code: {response.status_code}")
-        time.sleep(2)
+        time.sleep(SLEEP)
 
 def faucet(name: str, private_key: str, amount=0, proxy=None):
     if amount == 0:
