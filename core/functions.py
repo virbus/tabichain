@@ -9,6 +9,7 @@ from web3.middleware import geth_poa_middleware
 from web3.providers.rpc import HTTPProvider
 from data.config import RPC, TRANSFER_AMOUNT, SLEEP
 
+
 def extract_ip_from_proxy(proxy):
     if proxy.startswith("http://"):
         proxy = proxy[7:]
@@ -17,6 +18,7 @@ def extract_ip_from_proxy(proxy):
     at_split = proxy.split("@")[-1]
     ip = at_split.split(":")[0]
     return ip
+
 
 def create_session(proxy=None, check_proxy=False):
     session = requests.Session()
@@ -45,6 +47,7 @@ def create_session(proxy=None, check_proxy=False):
             raise Exception(f"Error during proxy check: {e}")
     return session
 
+
 def create_web3_with_proxy(rpc_endpoint, proxy=None):
     if proxy is None:
         return Web3(Web3.HTTPProvider(rpc_endpoint))
@@ -58,6 +61,7 @@ def create_web3_with_proxy(rpc_endpoint, proxy=None):
     web3 = Web3(custom_provider)
     web3.middleware_onion.inject(geth_poa_middleware, layer=0)
     return web3
+
 
 def estimate_gas_and_send(name, web3, tx, private_key, tx_name):
     tx["gas"] = int(web3.eth.estimate_gas(tx))
@@ -73,6 +77,7 @@ def estimate_gas_and_send(name, web3, tx, private_key, tx_name):
     time.sleep(SLEEP)
     return True
 
+
 def create_transaction(name, web3, private_key, tx_name, to, value, data):
     account = web3.eth.account.from_key(private_key)
     tx = {
@@ -86,6 +91,7 @@ def create_transaction(name, web3, private_key, tx_name, to, value, data):
     }
     result = estimate_gas_and_send(name, web3, tx, private_key, tx_name)
     return result
+
 
 def claim_faucet(name, private_key: str, proxy=None):
     web3 = create_web3_with_proxy(RPC, proxy)
@@ -106,9 +112,10 @@ def claim_faucet(name, private_key: str, proxy=None):
         logger.error(f"{name} | Error status code: {response.status_code}")
         time.sleep(SLEEP)
 
+
 def faucet(name: str, private_key: str, amount=0, proxy=None):
     if amount == 0:
-        return claim_faucet(name,private_key, proxy)
+        return claim_faucet(name, private_key, proxy)
     else:
         web3 = create_web3_with_proxy(RPC, proxy)
         account = web3.eth.account.from_key(private_key)
@@ -118,7 +125,8 @@ def faucet(name: str, private_key: str, amount=0, proxy=None):
         if human_balance < amount:
             return claim_faucet(name, private_key, proxy)
 
-def transfer(name: str,private_key: str, private_key_to: str, proxy=None) -> bool:
+
+def transfer(name: str, private_key: str, private_key_to: str, proxy=None) -> bool:
     web3 = create_web3_with_proxy(RPC, proxy)
     send_value = random.uniform(*TRANSFER_AMOUNT)
     result = create_transaction(

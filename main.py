@@ -1,6 +1,6 @@
 from core.file import load_file, save_file
 from core.menu import *
-from data.config import DATA_FILE, DATA_SHEET
+from data.config import DATA_FILE, DATA_SHEET, FAUCET_MIN_BALANCE
 from core.functions import *
 def main():
     while True:
@@ -31,7 +31,7 @@ def main():
                         if isinstance(row['Faucet'], int) is False:
                             row['Faucet'] = 0
                         try:
-                            result = faucet(row['Name'], row['Private'], 1, row['Proxy'])
+                            result = faucet(row['Name'], row['Private'], FAUCET_MIN_BALANCE, row['Proxy'])
                             if result:
                                 accounts.loc[i, 'Faucet'] = row['Faucet'] + 1
                         except Exception as e:
