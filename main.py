@@ -53,7 +53,7 @@ def main():
                         if isinstance(row['Send'], int) is False:
                             row['Send'] = 0
                         try:
-                            send_to = accounts.sample(n=1)
+                            send_to = accounts.sample(n=1) # select randon wallet
                             send_to_private = send_to['Private'].values[0]
                             result = transfer(row['Name'], row['Private'], send_to_private, row['Proxy'])
                             if result:
