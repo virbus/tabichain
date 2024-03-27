@@ -7,7 +7,7 @@ from requests.sessions import Session
 from fake_useragent import UserAgent
 from web3.middleware import geth_poa_middleware
 from web3.providers.rpc import HTTPProvider
-from data.config import RPC, TRANSFER_AMOUNT, SLEEP
+from data.config import RPC, TRANSFER_AMOUNT, SLEEP, EXPLORER
 
 
 def extract_ip_from_proxy(proxy):
@@ -73,7 +73,7 @@ def estimate_gas_and_send(name, web3, tx, private_key, tx_name):
         logger.error(f"{name} | Transaction {transaction_hash} failed!")
         time.sleep(SLEEP)
         return False
-    logger.success(f"{name} | {tx_name} hash: {transaction_hash}")
+    logger.success(f"{name} | {tx_name} hash: {EXPLORER}/{transaction_hash}")
     time.sleep(SLEEP)
     return True
 
@@ -105,7 +105,7 @@ def claim_faucet(name, private_key: str, proxy=None):
     )
     if response.status_code == 200:
         response = response.json()
-        logger.success(f"{name} | {response['message']} | tx: {response['hash']}")
+        logger.success(f"{name} | {response['message']} | tx: {EXPLORER}/{response['hash']}")
         time.sleep(SLEEP)
         return response
     else:
@@ -122,7 +122,7 @@ def faucet(name: str, private_key: str, amount=0, proxy=None):
         balance = web3.eth.get_balance(account.address)
         human_balance = round(web3.from_wei(balance, 'ether'), 6)
         logger.warning(f"{name} | Balance {human_balance} TABI")
-        if human_balance < amount:
+        if human_balance <= amount:
             return claim_faucet(name, private_key, proxy)
 
 

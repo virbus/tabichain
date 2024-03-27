@@ -1,6 +1,9 @@
 DATA_FILE = "data/data.xlsx"
 DATA_SHEET = "Main"
 RPC = "https://rpc.testnet.tabichain.com"
-FAUCET_MIN_BALANCE = 5
+EXPLORER = "https://testnet.tabiscan.com/tx"
+FAUCET_MIN_BALANCE: int = 15
+MIN_TRANSFER_COUNT: int = 10
 TRANSFER_AMOUNT: tuple[float, float] = (0.01, 0.1)
-SLEEP = 3
+SLEEP: int = 5
+SHUFFLE: bool = True
