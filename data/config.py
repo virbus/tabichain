@@ -5,5 +5,5 @@ EXPLORER = "https://testnet.tabiscan.com/tx"
 FAUCET_MIN_BALANCE: int = 15
 MIN_TRANSFER_COUNT: int = 10
 TRANSFER_AMOUNT: tuple[float, float] = (0.01, 0.1)
-SLEEP: int = 5
+SLEEP: int = 4
 SHUFFLE: bool = True
