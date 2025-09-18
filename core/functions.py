@@ -9,6 +9,26 @@ from web3.middleware import geth_poa_middleware
 from web3.providers.rpc import HTTPProvider
 from data.config import RPC, TRANSFER_AMOUNT, SLEEP, EXPLORER
 
+# Caches to avoid recreating expensive objects repeatedly
+_SESSION_CACHE = {}
+_PROVIDER_SESSION_CACHE = {}
+_WEB3_CACHE = {}
+_USER_AGENT_STRING = None
+
+
+def _get_user_agent():
+    global _USER_AGENT_STRING
+    if _USER_AGENT_STRING:
+        return _USER_AGENT_STRING
+    try:
+        _USER_AGENT_STRING = UserAgent().random
+    except Exception:
+        _USER_AGENT_STRING = (
+            "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+        )
+    return _USER_AGENT_STRING
+
 
 def extract_ip_from_proxy(proxy):
     if proxy.startswith("http://"):
@@ -21,10 +41,13 @@ def extract_ip_from_proxy(proxy):
 
 
 def create_session(proxy=None, check_proxy=False):
+    cache_key = proxy or "__DIRECT__"
+    if cache_key in _SESSION_CACHE:
+        return _SESSION_CACHE[cache_key]
     session = requests.Session()
     session.headers.update(
         {
-            "User-Agent": UserAgent().random,
+            "User-Agent": _get_user_agent(),
             "Accept": "application/json, text/plain, */*",
             "Origin": "https://faucet.testnet.tabichain.com",
             "Connection": "keep-alive",
@@ -36,7 +59,7 @@ def create_session(proxy=None, check_proxy=False):
     if check_proxy and proxy:
         try:
             proxy_ip = extract_ip_from_proxy(proxy)
-            actual_ip = session.get("https://api.ipify.org").text
+            actual_ip = session.get("https://api.ipify.org", timeout=10).text
             if actual_ip != proxy_ip:
                 raise Exception(
                     f"Error: Proxy IP ({proxy_ip}) does not match actual IP ({actual_ip}). Stopping script."
@@ -45,21 +68,29 @@ def create_session(proxy=None, check_proxy=False):
                 print(f"Proxy check passed: {actual_ip}")
         except requests.RequestException as e:
             raise Exception(f"Error during proxy check: {e}")
+    _SESSION_CACHE[cache_key] = session
     return session
 
 
 def create_web3_with_proxy(rpc_endpoint, proxy=None):
+    cache_key = (rpc_endpoint, proxy or "__DIRECT__")
+    if cache_key in _WEB3_CACHE:
+        return _WEB3_CACHE[cache_key]
     if proxy is None:
-        return Web3(Web3.HTTPProvider(rpc_endpoint))
-    proxy_settings = {
-        "http": proxy,
-        "https": proxy,
-    }
-    session = Session()
-    session.proxies = proxy_settings
-    custom_provider = HTTPProvider(rpc_endpoint, session=session)
-    web3 = Web3(custom_provider)
+        provider = HTTPProvider(rpc_endpoint)
+    else:
+        proxy_settings = {"http": proxy, "https": proxy}
+        provider_session_key = proxy or "__DIRECT__"
+        session = _PROVIDER_SESSION_CACHE.get(provider_session_key)
+        if session is None:
+            session = Session()
+            session.proxies = proxy_settings
+            _PROVIDER_SESSION_CACHE[provider_session_key] = session
+        provider = HTTPProvider(rpc_endpoint, session=session)
+    web3 = Web3(provider)
+    # Always inject POA middleware for this chain
     web3.middleware_onion.inject(geth_poa_middleware, layer=0)
+    _WEB3_CACHE[cache_key] = web3
     return web3
 
 
@@ -102,7 +133,7 @@ def claim_faucet(name, private_key: str, proxy=None):
         json={
             "address": account.address,
         },
-    )
+    , timeout=30)
     if response.status_code == 200:
         response = response.json()
         logger.success(f"{name} | {response['message']} | tx: {EXPLORER}/{response['hash']}")
