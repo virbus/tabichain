@@ -1,7 +1,10 @@
+import time
+import random
 from core.file import load_file, save_file
 from core.menu import *
 from data.config import DATA_FILE, DATA_SHEET, FAUCET_MIN_BALANCE, MIN_TRANSFER_COUNT, SHUFFLE
 from core.functions import *
+from core.logger import logger
 def main():
     while True:
         accounts = load_file(debug=False, file=DATA_FILE, sheet=DATA_SHEET)
@@ -53,8 +56,8 @@ def main():
                         if isinstance(row['Send'], int) is False:
                             row['Send'] = 0
                         try:
-                            send_to = accounts.sample(n=1) # select randon wallet
-                            send_to_private = send_to['Private'].values[0]
+                            send_to_index = random.randrange(len(accounts))
+                            send_to_private = accounts.iloc[send_to_index]['Private']
                             result = transfer(row['Name'], row['Private'], send_to_private, row['Proxy'])
                             if result:
                                 accounts.loc[i, 'Send'] = row['Send'] + 1
@@ -70,8 +73,8 @@ def main():
                             row['Send'] = 0
                         if row['Send'] < MIN_TRANSFER_COUNT:
                             try:
-                                send_to = accounts.sample(n=1)
-                                send_to_private = send_to['Private'].values[0]
+                                send_to_index = random.randrange(len(accounts))
+                                send_to_private = accounts.iloc[send_to_index]['Private']
                                 result = transfer(row['Name'], row['Private'], send_to_private, row['Proxy'])
                                 if result:
                                     accounts.loc[i, 'Send'] = row['Send'] + 1

@@ -1,5 +1,6 @@
 import sys
 import re
+import os
 
 from loguru import logger
 
@@ -8,6 +9,7 @@ def logging_setup():
     format_error = "{time:HH:mm:ss.SS} | {level} | <cyan>{line}</cyan> | <level>{message}</level>"
     file_path = r"logs/"
     logger.remove()
+    os.makedirs(file_path, exist_ok=True)
     logger.add(file_path + "logger.log", colorize=False, format=clean_brackets(format_error))
     logger.add(sys.stdout, colorize=True, format=format_info, level="INFO")
 
